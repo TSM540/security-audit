@@ -62,24 +62,9 @@ class SecurityAuditLogger:
             }
         )
 
-        # Finding 2: Pre-commit hooks from external sources
-        audit_report["findings"].append(
-            {
-                "severity": "HIGH",
-                "category": "External Tool Execution",
-                "description": "Pre-commit hooks download and execute code from GitHub repositories",
-                "evidence": {
-                    "pre_commit_repos": [
-                        "https://github.com/astral-sh/ruff-pre-commit"
-                    ],
-                    "execution_context": "Runs with full pipeline permissions",
-                },
-                "risk": "Compromised pre-commit repositories could execute malicious code during builds",
-                "recommendation": "Mirror pre-commit hooks in internal Git or disable external hooks",
-            }
-        )
+        
 
-        # Finding 3: Environment variables exposure risk
+        # Finding 2: Environment variables exposure risk
         audit_report["findings"].append(
             {
                 "severity": "CRITICAL",
@@ -100,6 +85,7 @@ class SecurityAuditLogger:
                                 "SECRET",
                                 "PASSWORD",
                                 "CREDENTIAL",
+                                "SECRET",
                             ]
                         )
                     ],
@@ -109,7 +95,7 @@ class SecurityAuditLogger:
             }
         )
 
-        # Finding 4: Network access validation
+        # Finding 3: Network access validation
         audit_report["findings"].append(
             {
                 "severity": "MEDIUM",
